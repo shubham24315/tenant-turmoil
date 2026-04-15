@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { LogOutIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -21,16 +21,28 @@ type AppNavProps = {
   user: User | null;
 };
 
-export function AppNav({ user }: AppNavProps) {
-  const router = useRouter();
+export function AppNav({ user: serverUser }: AppNavProps) {
+  const [user, setUser] = useState(serverUser);
+
+  useEffect(() => {
+    setUser(serverUser);
+  }, [serverUser]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
   const first = firstNameFromUser(user);
   const avatarUrl = avatarUrlFromUser(user);
 
-  async function signOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.refresh();
-    router.push("/");
+  function signOut() {
+    window.location.assign("/auth/sign-out");
   }
 
   return (

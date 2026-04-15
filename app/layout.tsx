@@ -21,6 +21,8 @@ export const metadata: Metadata = {
     "Log issues in your rented flat—leaks, power cuts, and more—and browse how other properties stack up across Bengaluru.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function RootLayout({
   children,
 }: Readonly<{
