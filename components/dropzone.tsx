@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { CheckCircle, File, Loader2, Upload, X } from 'lucide-react'
 import { createContext, useCallback, useContext, type PropsWithChildren } from 'react'
 
@@ -48,7 +49,7 @@ const Dropzone = ({
       <div
         {...getRootProps({
           className: cn(
-            'border-2 border-gray-300 rounded-lg p-6 text-center bg-card transition-colors duration-300 text-foreground',
+            'rounded-lg border-2 border-border bg-card p-6 text-center text-foreground transition-colors duration-300',
             className,
             isSuccess ? 'border-solid' : 'border-dashed',
             isActive && 'border-primary bg-primary/10',
@@ -106,12 +107,19 @@ const DropzoneContent = ({ className }: { className?: string }) => {
             key={`${file.name}-${idx}`}
             className="flex items-center gap-x-4 border-b py-2 first:mt-4 last:mb-4 "
           >
-            {file.type.startsWith('image/') ? (
-              <div className="h-10 w-10 rounded border overflow-hidden shrink-0 bg-muted flex items-center justify-center">
-                <img src={file.preview} alt={file.name} className="object-cover" />
+            {file.type.startsWith('image/') && file.preview ? (
+              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-md border border-border bg-muted">
+                <Image
+                  src={file.preview}
+                  alt={file.name}
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                  unoptimized
+                />
               </div>
             ) : (
-              <div className="h-10 w-10 rounded border bg-muted flex items-center justify-center">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-border bg-muted">
                 <File size={18} />
               </div>
             )}

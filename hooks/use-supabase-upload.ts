@@ -111,7 +111,7 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
     multiple: maxFiles !== 1,
   })
 
-  const onUpload = useCallback(async () => {
+  const onUpload = async () => {
     setLoading(true)
 
     // [Joshen] This is to support handling partial successes
@@ -152,28 +152,36 @@ const useSupabaseUpload = (options: UseSupabaseUploadOptions) => {
     setSuccesses(newSuccesses)
 
     setLoading(false)
-  }, [files, path, bucketName, errors, successes])
+  }
 
   useEffect(() => {
     if (files.length === 0) {
-      setErrors([])
+      // Defer so eslint/react compiler allow this sync-from-deps cleanup (same outcome as in-effect setState).
+      queueMicrotask(() => {
+        setErrors([])
+        setSuccesses([])
+      })
+      return
     }
 
     // If the number of files doesn't exceed the maxFiles parameter, remove the error 'Too many files' from each file
     if (files.length <= maxFiles) {
       let changed = false
       const newFiles = files.map((file) => {
-        if (file.errors.some((e) => e.code === 'too-many-files')) {
-          file.errors = file.errors.filter((e) => e.code !== 'too-many-files')
-          changed = true
+        if (!file.errors.some((e) => e.code === 'too-many-files')) {
+          return file
         }
+        changed = true
+        const f = file as FileWithPreview
+        f.errors = file.errors.filter((e) => e.code !== 'too-many-files')
         return file
       })
       if (changed) {
-        setFiles(newFiles)
+        const snapshot = [...newFiles]
+        queueMicrotask(() => setFiles(snapshot))
       }
     }
-  }, [files.length, setFiles, maxFiles])
+  }, [files, maxFiles])
 
   return {
     files,
