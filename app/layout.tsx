@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { createClient } from "@/lib/supabase/server";
 import { AppNav } from "@/components/app-nav";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,6 +39,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col font-sans">
         <AppNav user={user} />
         <div className="flex flex-1 flex-col">{children}</div>
+        <Analytics />
       </body>
     </html>
   );
