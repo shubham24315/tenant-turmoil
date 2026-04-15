@@ -5,6 +5,8 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AddressTypeahead } from "@/components/address-typeahead";
+import type { PhotonPlaceSuggestion } from "@/lib/places/photon";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,6 +52,9 @@ function noteNeedsSave(n: DraftNote): boolean {
 export function PropertySetupForm() {
   const router = useRouter();
   const [address, setAddress] = useState("");
+  const [selectedPlace, setSelectedPlace] = useState<PhotonPlaceSuggestion | null>(
+    null,
+  );
   const [notes, setNotes] = useState<DraftNote[]>([newDraftNote()]);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -75,6 +80,13 @@ export function PropertySetupForm() {
     const trimmedAddress = address.trim();
     if (!trimmedAddress) {
       setError("Add your property address.");
+      return;
+    }
+    if (
+      !selectedPlace ||
+      trimmedAddress !== selectedPlace.label.trim()
+    ) {
+      setError("Choose an address from the suggestions.");
       return;
     }
 
@@ -111,6 +123,10 @@ export function PropertySetupForm() {
         owner_id: user.id,
         address: trimmedAddress,
         city: "Bengaluru",
+        latitude: selectedPlace.latitude,
+        longitude: selectedPlace.longitude,
+        osm_id: selectedPlace.osmId,
+        osm_type: selectedPlace.osmType,
       })
       .select("id")
       .single();
@@ -186,15 +202,16 @@ export function PropertySetupForm() {
           <CardTitle>Property</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
-          <Label htmlFor="address">Address in Bengaluru</Label>
-          <Input
+          <AddressTypeahead
             id="address"
-            name="address"
+            label="Address in Bengaluru"
             value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="Neighbourhood, building, unit…"
-            autoComplete="street-address"
+            onValueChange={setAddress}
+            selectedPlace={selectedPlace}
+            onSelectedPlaceChange={setSelectedPlace}
+            placeholder="Start typing a street or neighbourhood…"
             required
+            disabled={pending}
           />
         </CardContent>
       </Card>

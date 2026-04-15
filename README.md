@@ -21,6 +21,7 @@ The product goal is simple: make rental pain visible so the next tenant goes in 
 | Framework | [Next.js](https://nextjs.org) 16 (App Router), React 19 |
 | Backend / DB / Auth / Files | [Supabase](https://supabase.com) (Postgres, Auth, Storage) |
 | UI | [shadcn/ui](https://ui.shadcn.com) (Radix + Tailwind CSS4) |
+| Address search | [Photon](https://photon.komoot.io) (geocoding over [OpenStreetMap](https://www.openstreetmap.org/copyright) data) |
 | Package manager | [pnpm](https://pnpm.io) |
 
 ---

@@ -8,6 +8,10 @@ export type PropertyRow = {
   address: string;
   city: string;
   created_at: string;
+  latitude: number | null;
+  longitude: number | null;
+  osm_id: number | null;
+  osm_type: string | null;
 };
 
 export type PropertyRatingStatsRow = {
