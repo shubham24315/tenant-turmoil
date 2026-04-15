@@ -11,6 +11,9 @@ export function LoginWithGoogle() {
   async function signIn() {
     setPending(true);
     const supabase = createClient();
+    // Must match Supabase Auth → URL Configuration → Redirect URLs, including
+    // this path (e.g. add http://localhost:3000/** and https://your-domain/**).
+    // If redirectTo is not allowed, Supabase falls back to Site URL (often prod).
     const origin = window.location.origin;
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
