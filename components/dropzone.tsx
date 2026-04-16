@@ -5,7 +5,10 @@ import { CheckCircle, File, Loader2, Upload, X } from 'lucide-react'
 import { createContext, useCallback, useContext, type PropsWithChildren } from 'react'
 
 import { cn } from '@/lib/utils'
-import { type UseSupabaseUploadReturn } from '@/hooks/use-supabase-upload'
+import {
+  type FileWithPreview,
+  type UseSupabaseUploadReturn,
+} from '@/hooks/use-supabase-upload'
 import { Button } from '@/components/ui/button'
 
 export const formatBytes = (
@@ -42,7 +45,7 @@ const Dropzone = ({
   const isInvalid =
     (restProps.isDragActive && restProps.isDragReject) ||
     (restProps.errors.length > 0 && !restProps.isSuccess) ||
-    restProps.files.some((file) => file.errors.length !== 0)
+    restProps.files.some((file: FileWithPreview) => file.errors.length !== 0)
 
   return (
     <DropzoneContext.Provider value={{ ...restProps }}>
@@ -80,7 +83,7 @@ const DropzoneContent = ({ className }: { className?: string }) => {
 
   const handleRemoveFile = useCallback(
     (fileName: string) => {
-      setFiles(files.filter((file) => file.name !== fileName))
+      setFiles(files.filter((file: FileWithPreview) => file.name !== fileName))
     },
     [files, setFiles]
   )
@@ -98,9 +101,9 @@ const DropzoneContent = ({ className }: { className?: string }) => {
 
   return (
     <div className={cn('flex flex-col', className)}>
-      {files.map((file, idx) => {
-        const fileError = errors.find((e) => e.name === file.name)
-        const isSuccessfullyUploaded = !!successes.find((e) => e === file.name)
+      {files.map((file: FileWithPreview, idx: number) => {
+        const fileError = errors.find((e: { name: string }) => e.name === file.name)
+        const isSuccessfullyUploaded = !!successes.find((e: string) => e === file.name)
 
         return (
           <div
@@ -173,7 +176,7 @@ const DropzoneContent = ({ className }: { className?: string }) => {
           <Button
             variant="outline"
             onClick={onUpload}
-            disabled={files.some((file) => file.errors.length !== 0) || loading}
+            disabled={files.some((file: FileWithPreview) => file.errors.length !== 0) || loading}
           >
             {loading ? (
               <>

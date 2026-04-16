@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 
 const supabase = createClient()
 
-interface FileWithPreview extends File {
+export interface FileWithPreview extends File {
   preview?: string
   errors: readonly FileError[]
 }

@@ -22,7 +22,7 @@ The product goal is simple: make rental pain visible so the next tenant goes in 
 | Backend / DB / Auth / Files | [Supabase](https://supabase.com) (Postgres, Auth, Storage) |
 | UI | [shadcn/ui](https://ui.shadcn.com) (Radix + Tailwind CSS4) |
 | Address search | [Photon](https://photon.komoot.io) (geocoding over [OpenStreetMap](https://www.openstreetmap.org/copyright) data) |
-| Package manager | [pnpm](https://pnpm.io) |
+| Package manager | [npm](https://docs.npmjs.com/cli/) (with Node.js) |
 
 ---
 
@@ -48,8 +48,7 @@ middleware.ts           # Refreshes Supabase session cookies (no forced login)
 
 ## Prerequisites
 
-- **Node.js** 20+ (recommended)
-- **pnpm** 9+
+- **Node.js** 20+ (recommended; includes **npm**)
 - A **Supabase** project (free tier is fine)
 - **Google OAuth** credentials if you use Google sign-in (configured in Supabase Auth)
 
@@ -62,7 +61,7 @@ middleware.ts           # Refreshes Supabase session cookies (no forced login)
 ```bash
 git clone <your-fork-or-repo-url>
 cd tenant-turmoil
-pnpm install
+npm install
 ```
 
 ### 2. Environment variables
@@ -106,7 +105,7 @@ The app uses `signInWithOAuth` with `redirectTo` pointing at `/auth/callback`.
 ### 5. Run the app
 
 ```bash
-pnpm dev
+npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000). Public routes (home, browse, property detail) work without signing in; listing a property requires Google login.
@@ -114,8 +113,8 @@ Open [http://localhost:3000](http://localhost:3000). Public routes (home, browse
 ### 6. Quality checks
 
 ```bash
-pnpm lint          # ESLint
-pnpm run build     # Production build + TypeScript
+npm run lint       # ESLint
+npm run build      # Production build + TypeScript
 ```
 
 ---
@@ -131,7 +130,7 @@ You deploy **two pieces**: the **Next.js app** (frontend + API routes + middlewa
 3. Set **environment variables** in the hosting dashboard (same names as `.env.local`):
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
-4. Deploy. Vercel will run `pnpm install`, `next build`, and serve the app.
+4. Deploy. Vercel will run `npm install`, `next build`, and serve the app.
 
 5. Update Supabase **Site URL** and **Redirect URLs** to your **production** origin so OAuth returns to `https://<your-domain>/auth/callback`.
 
@@ -156,8 +155,8 @@ Contributions are welcome: bug fixes, copy improvements, accessibility, and smal
 2. **Fork** the repository and create a branch: `feat/short-description` or `fix/short-description`.
 3. **Keep PRs focused**: one logical change per pull request; avoid drive-by refactors.
 4. **Before opening a PR**:
-   - `pnpm lint`
-   - `pnpm run build`
+   - `npm run lint`
+   - `npm run build`
 5. **Describe the PR** in plain language: what changed, why, and how to verify (including any Supabase or env steps if relevant).
 
 ### Code expectations
@@ -172,7 +171,7 @@ Contributions are welcome: bug fixes, copy improvements, accessibility, and smal
 This project uses shadcn’s CLI to add components. From the repo root:
 
 ```bash
-pnpm dlx shadcn@latest add <component>
+npx shadcn@latest add <component>
 ```
 
 See [`components.json`](components.json) for aliases and the optional `@supabase` registry.
@@ -183,11 +182,11 @@ See [`components.json`](components.json) for aliases and the optional `@supabase
 
 | Command | Description |
 |---------|-------------|
-| `pnpm dev` | Development server (Turbopack) |
-| `pnpm run build` | Production build |
-| `pnpm start` | Start production server (after `build`) |
-| `pnpm lint` | Run ESLint |
-| `pnpm run lint:fix` | ESLint with auto-fix |
+| `npm run dev` | Development server (Turbopack) |
+| `npm run build` | Production build |
+| `npm start` | Start production server (after `build`) |
+| `npm run lint` | Run ESLint |
+| `npm run lint:fix` | ESLint with auto-fix |
 
 ---
 
