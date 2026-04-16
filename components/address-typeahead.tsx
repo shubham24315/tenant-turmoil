@@ -1,7 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import type { PhotonPlaceSuggestion } from "@/lib/places/photon";
+import {
+  buildPhotonAutocompleteCacheKey,
+  normalizePhotonAutocompleteQuery,
+  PHOTON_AUTOCOMPLETE_MIN_QUERY_LENGTH,
+  type PhotonPlaceSuggestion,
+} from "@/lib/places/photon";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -24,6 +29,29 @@ type Props = {
 };
 
 const DEBOUNCE_MS = 350;
+
+const CLIENT_AUTOCOMPLETE_CACHE_MAX = 48;
+const clientAutocompleteCache = new Map<string, PhotonPlaceSuggestion[]>();
+
+function autocompleteCacheGet(key: string): PhotonPlaceSuggestion[] | undefined {
+  const hit = clientAutocompleteCache.get(key);
+  if (hit === undefined) return undefined;
+  clientAutocompleteCache.delete(key);
+  clientAutocompleteCache.set(key, hit);
+  return hit;
+}
+
+function autocompleteCacheSet(key: string, value: PhotonPlaceSuggestion[]) {
+  if (clientAutocompleteCache.has(key)) {
+    clientAutocompleteCache.delete(key);
+  }
+  clientAutocompleteCache.set(key, value);
+  while (clientAutocompleteCache.size > CLIENT_AUTOCOMPLETE_CACHE_MAX) {
+    const oldest = clientAutocompleteCache.keys().next().value as string | undefined;
+    if (oldest === undefined) break;
+    clientAutocompleteCache.delete(oldest);
+  }
+}
 
 export function AddressTypeahead({
   id,
@@ -52,7 +80,22 @@ export function AddressTypeahead({
 
   useEffect(() => {
     const q = debouncedValue.trim();
-    if (q.length < 2) {
+    if (q.length < PHOTON_AUTOCOMPLETE_MIN_QUERY_LENGTH) {
+      return;
+    }
+
+    const normalized = normalizePhotonAutocompleteQuery(q);
+    if (normalized.length < PHOTON_AUTOCOMPLETE_MIN_QUERY_LENGTH) {
+      return;
+    }
+
+    const cacheKey = buildPhotonAutocompleteCacheKey(normalized);
+    const cached = autocompleteCacheGet(cacheKey);
+    if (cached !== undefined) {
+      setSuggestions(cached);
+      setFetchError(null);
+      setActiveIndex(-1);
+      setLoading(false);
       return;
     }
 
@@ -70,6 +113,7 @@ export function AddressTypeahead({
         }
         const list = data.suggestions ?? [];
         if (!cancelled) {
+          autocompleteCacheSet(cacheKey, list);
           setSuggestions(list);
           setActiveIndex(-1);
         }
@@ -94,7 +138,7 @@ export function AddressTypeahead({
   const listVisible =
     focused &&
     !disabled &&
-    debouncedValue.trim().length >= 2 &&
+    debouncedValue.trim().length >= PHOTON_AUTOCOMPLETE_MIN_QUERY_LENGTH &&
     (loading || suggestions.length > 0 || !!fetchError);
 
   const pick = useCallback(
@@ -109,7 +153,7 @@ export function AddressTypeahead({
 
   function onInputChange(next: string) {
     onValueChange(next);
-    if (next.trim().length < 2) {
+    if (next.trim().length < PHOTON_AUTOCOMPLETE_MIN_QUERY_LENGTH) {
       setSuggestions([]);
       setFetchError(null);
       setLoading(false);

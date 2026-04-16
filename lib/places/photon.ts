@@ -8,7 +8,36 @@ export const BENGALURU_BBOX = {
 
 export const PHOTON_AUTOCOMPLETE_LIMIT = 8;
 
+/** Minimum length of normalized query for autocomplete (shared by API and client). */
+export const PHOTON_AUTOCOMPLETE_MIN_QUERY_LENGTH = 2;
+
+/** Maximum raw query length accepted before normalization (API only). */
+export const PHOTON_AUTOCOMPLETE_MAX_RAW_QUERY_LENGTH = 200;
+
 const PHOTON_BASE = "https://photon.komoot.io/api/";
+
+const AUTOCOMPLETE_CACHE_KEY_VERSION = "v1";
+
+export function normalizePhotonAutocompleteQuery(raw: string): string {
+  return raw
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+export function photonAutocompleteSearchParams(normalizedQ: string): URLSearchParams {
+  const { minLon, minLat, maxLon, maxLat } = BENGALURU_BBOX;
+  return new URLSearchParams({
+    q: normalizedQ,
+    limit: String(PHOTON_AUTOCOMPLETE_LIMIT),
+    lang: "en",
+    bbox: `${minLon},${minLat},${maxLon},${maxLat}`,
+  });
+}
+
+export function buildPhotonAutocompleteCacheKey(normalizedQ: string): string {
+  return `${AUTOCOMPLETE_CACHE_KEY_VERSION}|${photonAutocompleteSearchParams(normalizedQ).toString()}`;
+}
 
 export type PhotonPlaceSuggestion = {
   label: string;
@@ -47,14 +76,8 @@ type PhotonGeoJson = {
   features?: PhotonFeature[];
 };
 
-export function buildPhotonAutocompleteUrl(query: string): string {
-  const { minLon, minLat, maxLon, maxLat } = BENGALURU_BBOX;
-  const params = new URLSearchParams({
-    q: query,
-    limit: String(PHOTON_AUTOCOMPLETE_LIMIT),
-    lang: "en",
-    bbox: `${minLon},${minLat},${maxLon},${maxLat}`,
-  });
+export function buildPhotonAutocompleteUrl(normalizedQuery: string): string {
+  const params = photonAutocompleteSearchParams(normalizedQuery);
   return `${PHOTON_BASE}?${params.toString()}`;
 }
 
@@ -121,5 +144,28 @@ export function parsePhotonGeoJson(json: unknown): PhotonPlaceSuggestion[] {
     });
   }
 
+  return out;
+}
+
+/** Validates jsonb rows from place_autocomplete_cache; returns null if malformed. */
+export function parsePhotonPlaceSuggestionsFromCache(json: unknown): PhotonPlaceSuggestion[] | null {
+  if (!Array.isArray(json)) return null;
+  const out: PhotonPlaceSuggestion[] = [];
+  for (const item of json) {
+    if (!item || typeof item !== "object") return null;
+    const o = item as Record<string, unknown>;
+    if (typeof o.label !== "string") return null;
+    if (typeof o.latitude !== "number" || !Number.isFinite(o.latitude)) return null;
+    if (typeof o.longitude !== "number" || !Number.isFinite(o.longitude)) return null;
+    if (typeof o.osmId !== "number" || !Number.isFinite(o.osmId)) return null;
+    if (typeof o.osmType !== "string" || o.osmType.length < 1) return null;
+    out.push({
+      label: o.label,
+      latitude: o.latitude,
+      longitude: o.longitude,
+      osmId: o.osmId,
+      osmType: o.osmType,
+    });
+  }
   return out;
 }
