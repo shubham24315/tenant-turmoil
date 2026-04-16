@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AddressTypeahead } from "@/components/address-typeahead";
-import type { PhotonPlaceSuggestion } from "@/lib/places/photon";
+import type { PlaceSuggestion } from "@/lib/places/types";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -52,9 +52,7 @@ function noteNeedsSave(n: DraftNote): boolean {
 export function PropertySetupForm() {
   const router = useRouter();
   const [address, setAddress] = useState("");
-  const [selectedPlace, setSelectedPlace] = useState<PhotonPlaceSuggestion | null>(
-    null,
-  );
+  const [selectedPlace, setSelectedPlace] = useState<PlaceSuggestion | null>(null);
   const [notes, setNotes] = useState<DraftNote[]>([newDraftNote()]);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -82,11 +80,8 @@ export function PropertySetupForm() {
       setError("Add your property address.");
       return;
     }
-    if (
-      !selectedPlace ||
-      trimmedAddress !== selectedPlace.label.trim()
-    ) {
-      setError("Choose an address from the suggestions.");
+    if (!selectedPlace || trimmedAddress !== selectedPlace.label.trim()) {
+      setError("Choose a suggestion or pin your address on the map.");
       return;
     }
 
@@ -125,8 +120,9 @@ export function PropertySetupForm() {
         city: "Bengaluru",
         latitude: selectedPlace.latitude,
         longitude: selectedPlace.longitude,
-        osm_id: selectedPlace.osmId,
-        osm_type: selectedPlace.osmType,
+        osm_id: selectedPlace.kind === "photon" ? selectedPlace.osmId : null,
+        osm_type: selectedPlace.kind === "photon" ? selectedPlace.osmType : null,
+        location_source: selectedPlace.kind === "photon" ? "photon" : "map",
       })
       .select("id")
       .single();

@@ -5,14 +5,16 @@ import {
   buildPhotonAutocompleteCacheKey,
   normalizePhotonAutocompleteQuery,
   PHOTON_AUTOCOMPLETE_MIN_QUERY_LENGTH,
-  type PhotonPlaceSuggestion,
 } from "@/lib/places/photon";
+import { parsePlaceSuggestionsFromApi, type PlaceSuggestion } from "@/lib/places/types";
+import { AddressMapPicker } from "@/components/address-map-picker";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
 type AutocompleteResponse = {
-  suggestions?: PhotonPlaceSuggestion[];
+  suggestions?: unknown;
   error?: string;
 };
 
@@ -21,8 +23,8 @@ type Props = {
   label: string;
   value: string;
   onValueChange: (value: string) => void;
-  selectedPlace: PhotonPlaceSuggestion | null;
-  onSelectedPlaceChange: (place: PhotonPlaceSuggestion | null) => void;
+  selectedPlace: PlaceSuggestion | null;
+  onSelectedPlaceChange: (place: PlaceSuggestion | null) => void;
   disabled?: boolean;
   required?: boolean;
   placeholder?: string;
@@ -31,9 +33,20 @@ type Props = {
 const DEBOUNCE_MS = 350;
 
 const CLIENT_AUTOCOMPLETE_CACHE_MAX = 48;
-const clientAutocompleteCache = new Map<string, PhotonPlaceSuggestion[]>();
+const clientAutocompleteCache = new Map<string, PlaceSuggestion[]>();
 
-function autocompleteCacheGet(key: string): PhotonPlaceSuggestion[] | undefined {
+function suggestionKey(s: PlaceSuggestion, index: number): string {
+  switch (s.kind) {
+    case "photon":
+      return `p-${s.osmType}-${s.osmId}-${index}`;
+    case "community":
+      return `c-${s.communityPlaceId}-${index}`;
+    case "map_pin":
+      return `m-${s.mapPinId}-${index}`;
+  }
+}
+
+function autocompleteCacheGet(key: string): PlaceSuggestion[] | undefined {
   const hit = clientAutocompleteCache.get(key);
   if (hit === undefined) return undefined;
   clientAutocompleteCache.delete(key);
@@ -41,7 +54,7 @@ function autocompleteCacheGet(key: string): PhotonPlaceSuggestion[] | undefined 
   return hit;
 }
 
-function autocompleteCacheSet(key: string, value: PhotonPlaceSuggestion[]) {
+function autocompleteCacheSet(key: string, value: PlaceSuggestion[]) {
   if (clientAutocompleteCache.has(key)) {
     clientAutocompleteCache.delete(key);
   }
@@ -67,11 +80,12 @@ export function AddressTypeahead({
   const listId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [debouncedValue, setDebouncedValue] = useState(value);
-  const [suggestions, setSuggestions] = useState<PhotonPlaceSuggestion[]>([]);
+  const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [focused, setFocused] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [mapOpen, setMapOpen] = useState(false);
 
   useEffect(() => {
     const t = window.setTimeout(() => setDebouncedValue(value), DEBOUNCE_MS);
@@ -111,7 +125,7 @@ export function AddressTypeahead({
         if (!res.ok) {
           throw new Error(data.error ?? "Search failed.");
         }
-        const list = data.suggestions ?? [];
+        const list = parsePlaceSuggestionsFromApi({ suggestions: data.suggestions }) ?? [];
         if (!cancelled) {
           autocompleteCacheSet(cacheKey, list);
           setSuggestions(list);
@@ -142,7 +156,7 @@ export function AddressTypeahead({
     (loading || suggestions.length > 0 || !!fetchError);
 
   const pick = useCallback(
-    (place: PhotonPlaceSuggestion) => {
+    (place: PlaceSuggestion) => {
       onValueChange(place.label);
       onSelectedPlaceChange(place);
       setActiveIndex(-1);
@@ -231,22 +245,47 @@ export function AddressTypeahead({
             ) : null}
             {suggestions.map((s, index) => (
               <li
-                key={`${s.osmType}-${s.osmId}-${index}`}
+                key={suggestionKey(s, index)}
                 role="option"
                 aria-selected={activeIndex === index}
                 className={cn(
-                  "cursor-pointer px-3 py-2 text-sm outline-none",
+                  "flex cursor-pointer flex-col gap-0.5 px-3 py-2 text-sm outline-none",
                   activeIndex === index ? "bg-accent text-accent-foreground" : "",
                 )}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => pick(s)}
               >
-                {s.label}
+                <span className="flex items-center gap-2">
+                  {s.kind === "community" ? (
+                    <span className="rounded bg-muted px-1.5 py-0 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Community
+                    </span>
+                  ) : null}
+                  <span>{s.label}</span>
+                </span>
               </li>
             ))}
           </ul>
         ) : null}
       </div>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="w-full sm:w-auto"
+        disabled={disabled}
+        onClick={() => setMapOpen(true)}
+      >
+        Pin on map
+      </Button>
+      <AddressMapPicker
+        open={mapOpen}
+        onOpenChange={setMapOpen}
+        onConfirm={(place) => {
+          onValueChange(place.label);
+          onSelectedPlaceChange(place);
+        }}
+      />
       <p className="text-xs text-muted-foreground leading-relaxed">
         Address search by{" "}
         <a

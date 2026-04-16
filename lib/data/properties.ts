@@ -12,6 +12,7 @@ export type PropertyRow = {
   longitude: number | null;
   osm_id: number | null;
   osm_type: string | null;
+  location_source: string | null;
 };
 
 export type PropertyRatingStatsRow = {

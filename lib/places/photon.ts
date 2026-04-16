@@ -6,6 +6,22 @@ export const BENGALURU_BBOX = {
   maxLat: 13.17,
 } as const;
 
+export function isInBengaluruBbox(latitude: number, longitude: number): boolean {
+  const { minLon, minLat, maxLon, maxLat } = BENGALURU_BBOX;
+  return (
+    latitude >= minLat &&
+    latitude <= maxLat &&
+    longitude >= minLon &&
+    longitude <= maxLon
+  );
+}
+
+/** Center of the Bengaluru bbox (for default map view). */
+export function bengaluruBboxCenter(): { lat: number; lon: number } {
+  const { minLon, minLat, maxLon, maxLat } = BENGALURU_BBOX;
+  return { lat: (minLat + maxLat) / 2, lon: (minLon + maxLon) / 2 };
+}
+
 export const PHOTON_AUTOCOMPLETE_LIMIT = 8;
 
 /** Minimum length of normalized query for autocomplete (shared by API and client). */
@@ -79,6 +95,28 @@ type PhotonGeoJson = {
 export function buildPhotonAutocompleteUrl(normalizedQuery: string): string {
   const params = photonAutocompleteSearchParams(normalizedQuery);
   return `${PHOTON_BASE}?${params.toString()}`;
+}
+
+export function buildPhotonReverseUrl(latitude: number, longitude: number): string {
+  const params = new URLSearchParams({
+    lat: String(latitude),
+    lon: String(longitude),
+    lang: "en",
+  });
+  return `${PHOTON_BASE}reverse?${params.toString()}`;
+}
+
+/** First feature label from Photon reverse GeoJSON (does not require osm_id). */
+export function parsePhotonReverseLabel(json: unknown): string | null {
+  if (!json || typeof json !== "object") return null;
+  const root = json as PhotonGeoJson;
+  const features = root.features;
+  if (!Array.isArray(features) || features.length < 1) return null;
+  const f = features[0];
+  if (!f || typeof f !== "object") return null;
+  const props = f.properties ?? {};
+  const label = formatPhotonFeatureLabel(props);
+  return label.length > 0 ? label : null;
 }
 
 export function formatPhotonFeatureLabel(props: PhotonFeatureProperties): string {

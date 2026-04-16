@@ -128,3 +128,19 @@
     @apply font-sans;
   }
 }
+
+.address-map-picker .leaflet-container {
+  height: 280px;
+  width: 100%;
+}
+
+.address-map-marker-icon {
+  width: 18px !important;
+  height: 18px !important;
+  margin-left: -9px !important;
+  margin-top: -9px !important;
+  border-radius: 9999px;
+  background: var(--primary);
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
