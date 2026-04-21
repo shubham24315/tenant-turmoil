@@ -193,7 +193,7 @@ export function PropertySetupForm() {
       onSubmit={(e) => void onSubmit(e)}
       className="mx-auto flex w-full max-w-2xl flex-col gap-8"
     >
-      <Card>
+      <Card className="relative z-10 overflow-visible">
         <CardHeader>
           <CardTitle>Property</CardTitle>
         </CardHeader>
