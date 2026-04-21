@@ -28,9 +28,11 @@ function extFromFile(file: File): string {
 
 type Props = {
   propertyId: string;
+  /** Listing owner may add further notes on their own place. */
+  isOwner?: boolean;
 };
 
-export function AddNoteSection({ propertyId }: Props) {
+export function AddNoteSection({ propertyId, isOwner = false }: Props) {
   const router = useRouter();
   const [body, setBody] = useState("");
   const [rating, setRating] = useState(5);
@@ -115,7 +117,9 @@ export function AddNoteSection({ propertyId }: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">Add another note</CardTitle>
+        <CardTitle className="text-lg">
+          {isOwner ? "Add another note" : "Add a note"}
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <form

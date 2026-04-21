@@ -76,6 +76,8 @@ export async function userHasProperty(
     .from("properties")
     .select("id")
     .eq("owner_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (error) {
@@ -85,6 +87,7 @@ export async function userHasProperty(
   return data != null;
 }
 
+/** Most recently created listing for this user, if any. */
 export async function propertyIdForOwner(
   supabase: SupabaseClient,
   userId: string,
@@ -93,6 +96,8 @@ export async function propertyIdForOwner(
     .from("properties")
     .select("id")
     .eq("owner_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (error || !data) return null;

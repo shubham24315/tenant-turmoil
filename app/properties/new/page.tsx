@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { propertyIdForOwner } from "@/lib/data/properties";
 import { PropertySetupForm } from "./property-setup-form";
 
 export default async function NewPropertyPage() {
@@ -11,11 +10,6 @@ export default async function NewPropertyPage() {
 
   if (!user) {
     redirect("/login");
-  }
-
-  const existingId = await propertyIdForOwner(supabase, user.id);
-  if (existingId) {
-    redirect(`/properties/${existingId}`);
   }
 
   return (

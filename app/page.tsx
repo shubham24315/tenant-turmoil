@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { userHasProperty } from "@/lib/data/properties";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,16 +15,10 @@ export default async function Home() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const hasProperty =
-    user != null ? await userHasProperty(supabase, user.id) : false;
-
   let ctaHref = "/login";
   let ctaLabel = "Log in";
 
-  if (user && !hasProperty) {
-    ctaHref = "/properties/new";
-    ctaLabel = "Add your property";
-  } else if (user && hasProperty) {
+  if (user) {
     ctaHref = "/properties";
     ctaLabel = "Browse properties";
   }
@@ -49,9 +42,15 @@ export default async function Home() {
             <Button asChild size="lg">
               <Link href={ctaHref}>{ctaLabel}</Link>
             </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/properties">Browse without signing in</Link>
-            </Button>
+            {user ? (
+              <Button asChild variant="outline" size="lg">
+                <Link href="/properties/new">Add a property</Link>
+              </Button>
+            ) : (
+              <Button asChild variant="outline" size="lg">
+                <Link href="/properties">Browse without signing in</Link>
+              </Button>
+            )}
           </div>
         </section>
 
@@ -60,13 +59,13 @@ export default async function Home() {
             <CardHeader>
               <CardTitle>List your place</CardTitle>
               <CardDescription>
-                One listing per account: address plus notes with photos and a
-                rating for each issue.
+                Add one or more addresses you rent in Bengaluru, with notes,
+                photos, and a rating for each issue.
               </CardDescription>
             </CardHeader>
             <CardContent className="text-sm text-muted-foreground">
-              Notes are yours to add on the home you listed—others can read and
-              learn, not edit.
+              Anyone signed in can add their own note on a listing. You can
+              update the address on places you listed.
             </CardContent>
           </Card>
           <Card>

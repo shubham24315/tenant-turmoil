@@ -6,6 +6,7 @@ import { publicNoteImageUrl } from "@/lib/storage/note-image-url";
 import { ImageCarousel } from "@/components/image-carousel";
 import { RatingBreakdown } from "./rating-breakdown";
 import { AddNoteSection } from "./add-note-section";
+import { EditPropertyAddressSection } from "./edit-property-address";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -123,7 +124,15 @@ export default async function PropertyDetailPage({ params }: Props) {
           <RatingBreakdown stats={stats} />
         </section>
 
-        {isOwner ? <AddNoteSection propertyId={row.id} /> : null}
+        {isOwner ? (
+          <EditPropertyAddressSection
+            key={row.address}
+            propertyId={row.id}
+            initialAddress={row.address}
+          />
+        ) : null}
+
+        {user ? <AddNoteSection propertyId={row.id} isOwner={isOwner} /> : null}
 
         <Separator />
 
