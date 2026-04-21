@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { PropertySearchForm } from "@/components/property-search-form";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -38,19 +39,22 @@ export default async function Home() {
             neighbours—and see how other places compare before you sign the
             next lease.
           </p>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <Button asChild size="lg">
-              <Link href={ctaHref}>{ctaLabel}</Link>
-            </Button>
-            {user ? (
-              <Button asChild variant="outline" size="lg">
-                <Link href="/properties/new">Add a property</Link>
+          <div className="flex max-w-2xl flex-col gap-4">
+            <PropertySearchForm idPrefix="home-search" />
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <Button asChild size="lg">
+                <Link href={ctaHref}>{ctaLabel}</Link>
               </Button>
-            ) : (
-              <Button asChild variant="outline" size="lg">
-                <Link href="/properties">Browse without signing in</Link>
-              </Button>
-            )}
+              {user ? (
+                <Button asChild variant="outline" size="lg">
+                  <Link href="/properties/new">Add a property</Link>
+                </Button>
+              ) : (
+                <Button asChild variant="outline" size="lg">
+                  <Link href="/properties">Browse without signing in</Link>
+                </Button>
+              )}
+            </div>
           </div>
         </section>
 
